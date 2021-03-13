@@ -77,9 +77,9 @@ program test_inter_comms
         if (r_r .eq. master) then
            call mpi_recv(m,1,mpi_integer,master,tag,intercomm,status,error)
            print*,
-           write(*,'(A,I2,A,I2,A)') "Group A leader (local rank:", r_r, &
-                ") recv'ed data from Group B leader (local rank:", status%mpi_source, ")"
-           write(*,'(A,I2,A)') " ... Data recv'd:",m," (group B leader's world rank)"
+           write(*,'(A,I2,A,I2,A)') "Group 0 leader (local rank:", r_r, &
+                ") recv'ed data from Group 1 leader (local rank:", status%mpi_source, ")"
+           write(*,'(A,I2,A)') " ... Data recv'd:",m," (group 1 leader's world rank)"
            call mpi_send(w_r,1,mpi_integer,master,tag,intercomm,error)
         end if
      elseif (appn .eq. 1) then
@@ -87,9 +87,9 @@ program test_inter_comms
            call mpi_send(w_r,1,mpi_integer,master,tag,intercomm,error)
            call mpi_recv(m,1,mpi_integer,master,tag,intercomm,status,error)
            print*,
-           write(*,'(A,I2,A,I2,A)') "Group B leader (local rank:", r_r, &
-                ") recv'ed data from Group A leader (local rank:", status%mpi_source, ")"
-           write(*,'(A,I2,A)') " ... Data recv'd:",m," (group A leader's world rank)"
+           write(*,'(A,I2,A,I2,A)') "Group 1 leader (local rank:", r_r, &
+                ") recv'ed data from Group 0 leader (local rank:", status%mpi_source, ")"
+           write(*,'(A,I2,A)') " ... Data recv'd:",m," (group 0 leader's world rank)"
         end if
      end if
   end if

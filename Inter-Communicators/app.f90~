@@ -1,7 +1,0 @@
-program test-inter-comms
-  use mpi_f08
-  implicit none
-
-  
-  
-end program test

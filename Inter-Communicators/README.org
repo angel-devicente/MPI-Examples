@@ -1,3 +1,5 @@
+#+OPTIONS: ^:nil
+
 * Introduction
 
 The idea of this sample code is to show how two MPI applications can communicate
@@ -26,33 +28,22 @@ communicator into two intra-communicators via MPI_COMM_SPLIT (using the "colour"
 provided by the MPI_APPNUM variable). And then create an inter-communicator to
 connect these two groups.
 
-It looks like changing your app is a nuisance, but it is not that bad. You could
-change it to check for MPI_APPNUM. If this is not set (i.e. running it in the
-usual way), you create a communicator copy of MPI_COMM_WORLD to MPI_COMM_REAL
-(or such) with MPI_Comm_dup. If you are running in the proposed way (and hence
-you have a MPI_APPNUM), you first to the MPI_COMM_SPLIT and then copy the
-created intra-communicator to MPI_COMM_REAL. So, everywhere in the code you just
-use MPI_COMM_REAL and you don't need to change anything else in the code.
-   
-Obviously later you also have to take care of communication between the groups,
-but again, you can make that the code is dependent on whether MPI_APPNUM exists
-or not, so you should be able to keep the app running in the usual way and in
-this new way, without having to keep two separate versions of the code.
-   
-
 * Implementation   
 
 Here we go for option 2) above. 
 
 * Sample run
 
+** Running as just one app
+#+BEGIN_SRC bash 
 $ mpirun -np 3 ./app 
 Running only one app, I'm the master of group  0
 [GROUP: 0] Group master received data from group worker:  1 (rank in MPI_COMM_WORLD:  1)
 [GROUP: 0] Group master received data from group worker:  2 (rank in MPI_COMM_WORLD:  2)
+#+END_SRC
 
-
-
+** Running as two apps
+#+BEGIN_SRC bash 
 $ mpirun -np 3 ./app : -np 4 ./app
 Running two apps, I'm the master of group  0
 [GROUP: 0] Group master received data from group worker:  1 (rank in MPI_COMM_WORLD:  1)
@@ -62,8 +53,9 @@ Running two apps, I'm the master of group  1
 [GROUP: 1] Group master received data from group worker:  2 (rank in MPI_COMM_WORLD:  5)
 [GROUP: 1] Group master received data from group worker:  3 (rank in MPI_COMM_WORLD:  6)
 
-Group A leader (local rank: 0) recv'ed data from Group B leader (local rank: 0)
- ... Data recv'd: 3 (group B leader's world rank)
+Group 0 leader (local rank: 0) recv'ed data from Group 1 leader (local rank: 0)
+ ... Data recv'd: 3 (group 1 leader's world rank)
 
-Group B leader (local rank: 0) recv'ed data from Group A leader (local rank: 0)
- ... Data recv'd: 0 (group A leader's world rank)
+Group 1 leader (local rank: 0) recv'ed data from Group 0 leader (local rank: 0)
+ ... Data recv'd: 0 (group 0 leader's world rank)
+#+END_SRC
