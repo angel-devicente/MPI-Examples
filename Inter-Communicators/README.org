@@ -1,0 +1,69 @@
+* Introduction
+
+The idea of this sample code is to show how two MPI applications can communicate
+via Inter-communicators.
+
+One could do it in two ways:
+
+** 1) Using MPI_COMM_SPAWN
+
+you start running your code with, say 10 processes (group A), and then with
+mpi_comm_spawn you create another group of, say, 6 processes (group B). Both
+groups will have their MPI_COMM_WORLD, so they will behave as regular
+applications, but then you also have an inter-communicator that will allow you
+to send messages from one group to the other. This looks very promising, but the
+problem will be if you try to run this in a supercomputer where you are given a
+number of "slots" via Slurm or similar. Spawning new processes will not play
+nicely with the pre-allocated slots.
+
+** 2) Using mpirun and MPI_COMM_SPLIT   
+
+another option is to use the possibilities of mpirun (for example), to launch
+two executables at the same time. This will play nicely with Slurm, but then you
+will have to change slightly your application, because MPI_COMM_WORLD will be
+ALL the processes allocated with Slurm. The idea here would be to split the
+communicator into two intra-communicators via MPI_COMM_SPLIT (using the "colour"
+provided by the MPI_APPNUM variable). And then create an inter-communicator to
+connect these two groups.
+
+It looks like changing your app is a nuisance, but it is not that bad. You could
+change it to check for MPI_APPNUM. If this is not set (i.e. running it in the
+usual way), you create a communicator copy of MPI_COMM_WORLD to MPI_COMM_REAL
+(or such) with MPI_Comm_dup. If you are running in the proposed way (and hence
+you have a MPI_APPNUM), you first to the MPI_COMM_SPLIT and then copy the
+created intra-communicator to MPI_COMM_REAL. So, everywhere in the code you just
+use MPI_COMM_REAL and you don't need to change anything else in the code.
+   
+Obviously later you also have to take care of communication between the groups,
+but again, you can make that the code is dependent on whether MPI_APPNUM exists
+or not, so you should be able to keep the app running in the usual way and in
+this new way, without having to keep two separate versions of the code.
+   
+
+* Implementation   
+
+Here we go for option 2) above. 
+
+* Sample run
+
+$ mpirun -np 3 ./app 
+Running only one app, I'm the master of group  0
+[GROUP: 0] Group master received data from group worker:  1 (rank in MPI_COMM_WORLD:  1)
+[GROUP: 0] Group master received data from group worker:  2 (rank in MPI_COMM_WORLD:  2)
+
+
+
+$ mpirun -np 3 ./app : -np 4 ./app
+Running two apps, I'm the master of group  0
+[GROUP: 0] Group master received data from group worker:  1 (rank in MPI_COMM_WORLD:  1)
+[GROUP: 0] Group master received data from group worker:  2 (rank in MPI_COMM_WORLD:  2)
+Running two apps, I'm the master of group  1
+[GROUP: 1] Group master received data from group worker:  1 (rank in MPI_COMM_WORLD:  4)
+[GROUP: 1] Group master received data from group worker:  2 (rank in MPI_COMM_WORLD:  5)
+[GROUP: 1] Group master received data from group worker:  3 (rank in MPI_COMM_WORLD:  6)
+
+Group A leader (local rank: 0) recv'ed data from Group B leader (local rank: 0)
+ ... Data recv'd: 3 (group B leader's world rank)
+
+Group B leader (local rank: 0) recv'ed data from Group A leader (local rank: 0)
+ ... Data recv'd: 0 (group A leader's world rank)
